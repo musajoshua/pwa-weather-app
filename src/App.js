@@ -55,18 +55,9 @@ const App = () => {
       }
     };
 
-    const onVisible = () => {
-      if (document.visibilityState === "visible") drain();
-    };
-
     drain();
     window.addEventListener("online", drain);
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      window.removeEventListener("online", drain);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    return () => window.removeEventListener("online", drain);
   }, []);
 
   useEffect(() => {
@@ -96,7 +87,7 @@ const App = () => {
     setError(null);
   };
 
-  const loadWeather = async (query, { remember = false } = {}) => {
+  const loadWeather = async (query, remember = false) => {
     if (!navigator.onLine) {
       await queueOfflineSearch(query);
       return;
@@ -108,7 +99,7 @@ const App = () => {
       setError(null);
       if (remember) setRecentSearches((prev) => [query, ...prev]);
     } catch (err) {
-      if (err.message === "Network Error") {
+      if (!navigator.onLine) {
         await queueOfflineSearch(query);
       } else {
         setError(err.message);
@@ -118,7 +109,7 @@ const App = () => {
 
   const handleKeyDown = (e) => {
     if (e.key !== "Enter" || !cityName.trim()) return;
-    loadWeather(cityName, { remember: true });
+    loadWeather(cityName, true);
     setCityName("");
   };
 
