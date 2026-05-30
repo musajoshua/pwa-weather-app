@@ -36,28 +36,22 @@ const App = () => {
   }, [tempUnit]);
 
   useEffect(() => {
-    let isDraining = false;
-
     const drain = async () => {
-      if (isDraining || !navigator.onLine) return;
-      isDraining = true;
-      try {
-        const pending = await getPendingSearches();
-        for (const item of pending) {
-          try {
-            const { data } = await fetchWeather(item.query);
-            setWeatherData(data);
-            setRecentSearches((prev) => [item.query, ...prev]);
-            setError(null);
-          } catch (err) {
-            setError(`Could not drain ${item.query} ${err.message}`);
-          } finally {
-            await removePendingSearch(item.id);
-            setPendingCount((c) => Math.max(0, c - 1));
-          }
+      const pending = await getPendingSearches();
+      setPendingCount(pending.length);
+      if (!navigator.onLine) return;
+
+      for (const item of pending) {
+        try {
+          const { data } = await fetchWeather(item.query);
+          setWeatherData(data);
+          setRecentSearches((prev) => [item.query, ...prev]);
+          setError(null);
+        } catch (err) {
+          setError(`Could not drain ${item.query} ${err.message}`);
         }
-      } finally {
-        isDraining = false;
+        await removePendingSearch(item.id);
+        setPendingCount((c) => c - 1);
       }
     };
 
@@ -65,11 +59,7 @@ const App = () => {
       if (document.visibilityState === "visible") drain();
     };
 
-    getPendingSearches()
-      .then((items) => setPendingCount(items.length))
-      .catch(() => {});
     drain();
-
     window.addEventListener("online", drain);
     document.addEventListener("visibilitychange", onVisible);
 
@@ -103,12 +93,12 @@ const App = () => {
   const queueOfflineSearch = async (query) => {
     await enqueueSearch(query);
     setPendingCount((c) => c + 1);
+    setError(null);
   };
 
   const loadWeather = async (query, { remember = false } = {}) => {
     if (!navigator.onLine) {
       await queueOfflineSearch(query);
-      setError(null);
       return;
     }
 
@@ -120,7 +110,6 @@ const App = () => {
     } catch (err) {
       if (err.message === "Network Error") {
         await queueOfflineSearch(query);
-        setError(null);
       } else {
         setError(err.message);
       }
@@ -151,9 +140,7 @@ const App = () => {
       </div>
 
       {pendingCount > 0 && (
-        <div style={{ color: "orange" }}>
-          {pendingCount} search{pendingCount > 1 ? "es" : ""} queued (offline)
-        </div>
+        <div style={{ color: "orange" }}>{pendingCount} queued (offline)</div>
       )}
 
       {recentSearches.length > 0 && (
