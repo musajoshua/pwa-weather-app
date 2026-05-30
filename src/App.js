@@ -33,8 +33,8 @@ const App = () => {
             {weatherData.location.name}, {weatherData.location.region},  {weatherData.location.country}
           </h2>
           <p>
-            Lat: {weatherData.location?.lat} C
-            Lon: {weatherData.location?.lon} F
+            Lat: {weatherData.location?.lat} °C
+            Lon: {weatherData.location?.lon} °F
           </p>
           <p>
             Temperature: {weatherData.current?.temp_c} C

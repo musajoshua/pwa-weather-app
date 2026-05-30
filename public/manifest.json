@@ -1,7 +1,7 @@
 {
   "name": "Weather App",
   "short_name": "Weather",
-  "description": "This app allows users to check real weather",
+  "description": "This app allows users to check real weather information about cities",
   "icons": [
     {
       "src": "./assets/logo.png",
